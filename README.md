@@ -44,7 +44,7 @@ Genera la carpeta `build/` lista para producción.
 
 El sitio se publica automáticamente en:
 
-https://wilberhinestrosa.github.io/minesweeper-gambler/
+https://wilberhinestroza.github.io/minesweeper-gambler/
 
 Cada push a `master` (o `main`) ejecuta el workflow
 `.github/workflows/deploy.yml`, que compila el proyecto y lo publica en GitHub
