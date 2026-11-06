@@ -6,8 +6,16 @@ El diseño del juego está en [DESIGN.md](DESIGN.md).
 
 ## Estado
 
-Prototipo en desarrollo. Actualmente el repositorio contiene el esqueleto de
-Create React App y la configuración de despliegue.
+Fase 1 jugable: tablero con primer clic seguro, despeje automático, banderas,
+vidas, clics, puntuación, objetivo y fin de run.
+
+Controles:
+
+- **PC**: clic izquierdo para cavar, clic derecho para poner bandera.
+- **Móvil**: tocar para cavar, mantener pulsada una casilla para poner bandera.
+  También hay un botón para cambiar entre modo cavar y modo bandera.
+
+Pendiente: comodines y tienda (fase 2).
 
 ## Desarrollo
 

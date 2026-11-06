@@ -1,13 +1,57 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+:root {
+  --bg: #060a08;
+  --panel: rgba(15, 24, 19, 0.92);
+  --panel-solid: #0f1813;
+  --line: #24382c;
+  --text: #e9f2e6;
+  --muted: #8aa694;
+  --gold: #e9b949;
+  --gold-soft: #f4d98b;
+  --green-bright: #4fae7c;
+  --red: #e0483f;
+  --font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  color-scheme: dark;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  color: var(--text);
+  font-family: var(--font);
+  background-color: var(--bg);
+  background-image: radial-gradient(
+      900px 520px at 10% -10%,
+      rgba(47, 107, 74, 0.38),
+      transparent 62%
+    ),
+    radial-gradient(
+      760px 460px at 105% 110%,
+      rgba(233, 185, 73, 0.13),
+      transparent 60%
+    );
+  background-repeat: no-repeat;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
 }
