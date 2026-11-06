@@ -21,19 +21,20 @@ export default function MenuScreen({ onStart }) {
             número despejan zonas enteras y disparan tu puntuación.
           </li>
           <li>
-            Cada clic gasta <strong>1 de tus 5 clics</strong> por ronda.
+            Empiezas con <strong>8 movimientos</strong> por ronda y ganas más
+            en las rondas avanzadas.
           </li>
           <li>
             Supera el <strong>objetivo</strong> y pulsa <strong>COBRAR</strong>{' '}
-            para pasar de ronda y llevarte el dinero.
+            para pasar a la tienda y llevarte el dinero.
+          </li>
+          <li>
+            Entre rondas compra <strong>comodines</strong>: cambian la
+            puntuación, protegen de minas o dan dinero extra.
           </li>
           <li>
             Pisar una mina cuesta <strong>1 vida</strong>. Sin vidas, la run
             termina.
-          </li>
-          <li>
-            Cobra con clics sobrantes y con banderas acertadas para ganar más
-            dólares.
           </li>
         </ul>
       </div>

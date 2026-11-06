@@ -1,10 +1,13 @@
 // Constantes y curva de dificultad de la run.
 
 export const HEARTS = 3;
-export const CLICKS_PER_ROUND = 5;
+
+export const MAX_JOKERS = 5;
+export const SHOP_OFFERS = 3;
+export const REROLL_BASE_COST = 2;
 
 export const STREAK_STEP = 0.5; // mult extra por clic seguro consecutivo
-export const MAX_STREAK_MULT = 2.5; // tope de la racha
+export const MAX_STREAK_MULT = 2.5; // tope de la racha base
 
 export const CHIP_PER_CELL = 5;
 export const CHIP_PER_NUMBER = 5;
@@ -12,15 +15,22 @@ export const CHIP_PER_NUMBER = 5;
 export const BASE_REWARD = 3;
 export const MAX_FLAG_REWARD = 3;
 
+// Movimientos por ronda: 8 al empezar y +1 cada dos rondas (máx. 13).
+// La intención es que las rondas avanzadas den margen para despejar sin
+// sentir que cada clic es obligatorio.
+export function getClicksForRound(round) {
+  return Math.min(13, 7 + Math.ceil(round / 2));
+}
+
 const TABLE = [
   { round: 1, rows: 8, cols: 8, mines: 10, target: 500 },
-  { round: 2, rows: 8, cols: 8, mines: 12, target: 800 },
-  { round: 3, rows: 9, cols: 9, mines: 15, target: 1300 },
-  { round: 4, rows: 9, cols: 9, mines: 18, target: 2100 },
-  { round: 5, rows: 10, cols: 10, mines: 22, target: 3400 },
-  { round: 6, rows: 10, cols: 10, mines: 26, target: 5400 },
-  { round: 7, rows: 12, cols: 12, mines: 34, target: 8600 },
-  { round: 8, rows: 12, cols: 12, mines: 40, target: 13800 },
+  { round: 2, rows: 8, cols: 8, mines: 12, target: 750 },
+  { round: 3, rows: 9, cols: 9, mines: 15, target: 1050 },
+  { round: 4, rows: 9, cols: 9, mines: 18, target: 1450 },
+  { round: 5, rows: 10, cols: 10, mines: 22, target: 2000 },
+  { round: 6, rows: 10, cols: 10, mines: 26, target: 2700 },
+  { round: 7, rows: 12, cols: 12, mines: 34, target: 3700 },
+  { round: 8, rows: 12, cols: 12, mines: 40, target: 5000 },
 ];
 
 export function getRoundConfig(round) {

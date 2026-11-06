@@ -39,4 +39,27 @@ describe('scoring', () => {
     expect(result.chips).toBe(0);
     expect(result.points).toBe(0);
   });
+
+  test('cuenta casillas reveladas, borde y despeje de cero', () => {
+    const grid = [
+      { mine: false, adjacent: 1, row: 0, col: 0 },
+      { mine: false, adjacent: 0, row: 0, col: 1 },
+      { mine: false, adjacent: 2, row: 1, col: 0 },
+      { mine: false, adjacent: 1, row: 1, col: 1 },
+    ];
+
+    const result = calculateClick({
+      cells: grid,
+      revealed: [0, 1, 2, 3],
+      streak: 0,
+      rows: 2,
+      cols: 2,
+    });
+
+    // (5+5) + 5 + (5+10) + (5+5) = 40
+    expect(result.chips).toBe(40);
+    expect(result.revealed).toBe(4);
+    expect(result.borderCells).toBe(4);
+    expect(result.zeroRevealed).toBe(true);
+  });
 });

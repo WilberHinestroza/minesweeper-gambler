@@ -1,31 +1,76 @@
 import { useState } from 'react';
-import { BASE_REWARD, MAX_FLAG_REWARD } from '../game/balance';
+import {
+  BASE_REWARD,
+  MAX_FLAG_REWARD,
+  getClicksForRound,
+} from '../game/balance';
+import { countCorrectFlags } from '../game/board';
+import { applyMoneyJokers } from '../game/jokers';
 import Board from './Board';
 import Hud from './Hud';
+import JokerBar from './JokerBar';
+
+const DUD_LABELS = {
+  suertudo: '♣ Mina de fogueo: no pierdes vida',
+  seguro: '✚ Seguro activado: mina ignorada',
+  casco: '⛑ Casco activado: mina ignorada',
+};
+
+function Feedback({ result }) {
+  if (!result) {
+    return <span className="feedback-idle">Elige una casilla para empezar</span>;
+  }
+
+  if (result.type === 'mine') {
+    return <span className="feedback-mine">✸ ¡Mina! −1 vida</span>;
+  }
+
+  if (result.type === 'dud') {
+    return (
+      <span className="feedback-dud">
+        {DUD_LABELS[result.protection] ?? 'Mina desactivada'}
+      </span>
+    );
+  }
+
+  return (
+    <>
+      <span className="feedback-safe">
+        +{result.chips} × {result.mult} = <strong>+{result.points}</strong>
+      </span>
+      {result.triggers.length > 0 && (
+        <span className="triggers">
+          {result.triggers.map((trigger) => (
+            <span key={trigger.id} className="trigger">
+              <span aria-hidden="true">{trigger.symbol}</span> {trigger.label}
+            </span>
+          ))}
+        </span>
+      )}
+    </>
+  );
+}
 
 export default function RoundScreen({ state, dispatch }) {
   const [flagMode, setFlagMode] = useState(false);
 
   const canCashOut = state.score >= state.target;
-  const minReward = BASE_REWARD + state.clicksLeft;
+  const correctFlags = countCorrectFlags(state.board);
+  const moneyBonus = applyMoneyJokers(state);
+  const reward =
+    BASE_REWARD +
+    state.clicksLeft +
+    Math.min(correctFlags, MAX_FLAG_REWARD) +
+    moneyBonus.total;
 
   return (
     <main className="screen round-screen">
       <Hud state={state} />
 
+      <JokerBar jokers={state.jokers} />
+
       <div className="feedback" key={state.lastResult?.id ?? 'idle'}>
-        {state.lastResult ? (
-          state.lastResult.type === 'mine' ? (
-            <span className="feedback-mine">✸ ¡Mina! −1 vida</span>
-          ) : (
-            <span className="feedback-safe">
-              +{state.lastResult.chips} × {state.lastResult.mult} ={' '}
-              <strong>+{state.lastResult.points}</strong>
-            </span>
-          )
-        ) : (
-          <span className="feedback-idle">Elige una casilla para empezar</span>
-        )}
+        <Feedback result={state.lastResult} />
       </div>
 
       <Board
@@ -53,11 +98,12 @@ export default function RoundScreen({ state, dispatch }) {
             className="btn primary cashout"
             onClick={() => dispatch({ type: 'CASH_OUT' })}
           >
-            COBRAR (mín. ${minReward})
+            COBRAR ${reward}
           </button>
         ) : (
           <span className="hint">
-            Faltan {(state.target - state.score).toLocaleString('es-ES')} puntos
+            Faltan {(state.target - state.score).toLocaleString('es-ES')}{' '}
+            puntos
           </span>
         )}
       </div>
@@ -67,11 +113,10 @@ export default function RoundScreen({ state, dispatch }) {
         también puedes usar clic derecho.
       </p>
 
-      {canCashOut && (
-        <p className="hint hint-flags">
-          Las banderas acertadas suman hasta +${MAX_FLAG_REWARD} al cobrar.
-        </p>
-      )}
+      <p className="hint hint-flags">
+        {getClicksForRound(state.round)} movimientos esta ronda · banderas
+        acertadas hasta +${MAX_FLAG_REWARD} al cobrar
+      </p>
     </main>
   );
 }

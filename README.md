@@ -6,8 +6,18 @@ El diseño del juego está en [DESIGN.md](DESIGN.md).
 
 ## Estado
 
-Fase 1 jugable: tablero con primer clic seguro, despeje automático, banderas,
-vidas, clics, puntuación, objetivo y fin de run.
+Fase 2 jugable: buscaminas de casino con comodines y tienda.
+
+- Tablero con **primer clic seguro**, despeje automático y banderas.
+- **3 vidas** y **8 movimientos** al empezar, que suben hasta 13 en rondas
+  avanzadas.
+- Puntuación **chips × mult** con racha por clics seguros consecutivos.
+- **12 comodines** con efectos sobre puntuación, protección de minas y dinero.
+- Elige **1 comodín inicial gratis** entre 3 opciones.
+- Entre rondas: tienda con 3 ofertas, re-tirar y vender comodines.
+- Mazo de hasta **5 comodines**.
+- Cobra al superar el objetivo: base + movimientos sobrantes + banderas
+  acertadas + bonus de comodines.
 
 Controles:
 
@@ -15,7 +25,8 @@ Controles:
 - **Móvil**: tocar para cavar, mantener pulsada una casilla para poner bandera.
   También hay un botón para cambiar entre modo cavar y modo bandera.
 
-Pendiente: comodines y tienda (fase 2).
+Pendiente para siguientes fases: jefes, más tipos de comodines y progresión
+meta.
 
 ## Desarrollo
 

@@ -1,9 +1,10 @@
 import { useReducer } from 'react';
 import './App.css';
-import ClearedScreen from './components/ClearedScreen';
 import MenuScreen from './components/MenuScreen';
 import RoundScreen from './components/RoundScreen';
 import RunOverScreen from './components/RunOverScreen';
+import ShopScreen from './components/ShopScreen';
+import StarterScreen from './components/StarterScreen';
 import { createInitialState, runReducer } from './game/run';
 
 function init() {
@@ -19,15 +20,19 @@ function App() {
         <MenuScreen onStart={() => dispatch({ type: 'START_RUN' })} />
       )}
 
+      {state.phase === 'starter' && (
+        <StarterScreen
+          offers={state.starterOffers}
+          onPick={(id) => dispatch({ type: 'PICK_STARTER', id })}
+        />
+      )}
+
       {state.phase === 'round' && (
         <RoundScreen state={state} dispatch={dispatch} />
       )}
 
-      {state.phase === 'cleared' && (
-        <ClearedScreen
-          state={state}
-          onNext={() => dispatch({ type: 'NEXT_ROUND' })}
-        />
+      {state.phase === 'shop' && (
+        <ShopScreen state={state} dispatch={dispatch} />
       )}
 
       {state.phase === 'runOver' && (

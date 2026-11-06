@@ -131,6 +131,23 @@
   font-size: 1.02rem;
 }
 
+.btn.small {
+  min-height: 34px;
+  padding: 5px 12px;
+  font-size: 0.76rem;
+}
+
+.btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn:disabled:hover {
+  border-color: var(--line);
+}
+
 .btn.toggle.active {
   border-color: var(--gold);
   color: var(--gold-soft);
@@ -191,6 +208,149 @@
   border-color: #5a2622;
 }
 
+.badge.streak {
+  color: var(--green-bright);
+  border-color: #2a5540;
+  font-weight: 800;
+}
+
+/* ===== Comodines ===== */
+
+.joker-bar {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(4px, 1vw, 6px);
+}
+
+.joker-chip {
+  min-width: 0;
+  height: clamp(34px, 8vw, 42px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--joker-color, var(--line));
+  border-radius: 8px;
+  background: var(--panel-solid);
+  color: var(--joker-color, var(--muted));
+  font-size: clamp(0.95rem, 3.6vw, 1.15rem);
+  font-weight: 800;
+}
+
+.joker-chip.empty {
+  border-style: dashed;
+  border-top-style: dashed;
+  color: #33463a;
+  background: transparent;
+}
+
+.joker-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 132px;
+  padding: 10px 8px 9px;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--joker-color, var(--line));
+  border-radius: 10px;
+  background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.035),
+      rgba(0, 0, 0, 0.16)
+    ),
+    var(--panel-solid);
+  color: var(--text);
+  text-align: center;
+  font: inherit;
+  transition: border-color 0.15s ease, transform 0.12s ease,
+    box-shadow 0.15s ease;
+}
+
+button.joker-card {
+  cursor: pointer;
+}
+
+button.joker-card:hover:not(:disabled) {
+  border-color: var(--joker-color, var(--green-bright));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+button.joker-card:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+button.joker-card:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.joker-symbol {
+  width: 2.1rem;
+  height: 2.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  color: var(--joker-color, var(--gold-soft));
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.joker-name {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.joker-desc {
+  font-size: 0.68rem;
+  line-height: 1.3;
+  color: var(--muted);
+}
+
+.joker-footer {
+  margin-top: auto;
+  padding-top: 3px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--gold-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.joker-card.compact {
+  min-height: 96px;
+}
+
+.joker-card.compact .joker-desc {
+  display: none;
+}
+
+.joker-card.empty-slot {
+  border-style: dashed;
+  border-top-style: dashed;
+  border-top-color: var(--line);
+  color: #33463a;
+  background: transparent;
+  justify-content: center;
+}
+
+.joker-card.empty-slot .joker-symbol,
+.joker-card.empty-slot .joker-name {
+  color: #33463a;
+}
+
+.joker-card.empty-slot .joker-symbol {
+  border-color: #2a3a30;
+}
+
 .score-row {
   display: flex;
   align-items: baseline;
@@ -239,11 +399,36 @@
 .feedback {
   min-height: 26px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   text-align: center;
   font-weight: 700;
   animation: rise 0.22s ease-out;
+}
+
+.feedback-dud {
+  color: var(--green-bright);
+}
+
+.triggers {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.trigger {
+  border: 1px solid #3d3115;
+  border-radius: 999px;
+  background: rgba(233, 185, 73, 0.08);
+  color: var(--gold-soft);
+  padding: 1px 7px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 .feedback-safe {
@@ -401,6 +586,93 @@
   .hint-touch {
     display: block;
   }
+}
+
+/* ===== Inicio y tienda ===== */
+
+.starter-screen {
+  align-items: center;
+  text-align: center;
+}
+
+.starter-title {
+  margin: 0;
+  font-size: clamp(1.7rem, 7vw, 2.6rem);
+  line-height: 1.05;
+  color: var(--gold-soft);
+}
+
+.starter-offers {
+  width: 100%;
+}
+
+.shop-screen {
+  gap: clamp(10px, 1.6vh, 14px);
+}
+
+.shop-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.shop-title {
+  margin: 0;
+  font-size: clamp(2rem, 9vw, 3rem);
+  line-height: 1;
+  color: var(--gold-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-money {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.shop-money strong {
+  font-size: 1.35rem;
+  color: var(--gold-soft);
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.shop-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.section-head h2 {
+  margin: 0;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--green-bright);
+}
+
+.shop-offers,
+.shop-owned {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.hint-warn {
+  color: var(--gold);
 }
 
 /* ===== Resultados ===== */
@@ -587,5 +859,19 @@
 
   .controls .btn {
     flex: 1 1 auto;
+  }
+
+  .shop-offers,
+  .shop-owned {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .joker-card {
+    min-height: 122px;
+    padding: 8px 6px;
+  }
+
+  .joker-desc {
+    font-size: 0.66rem;
   }
 }

@@ -15,9 +15,19 @@ export function streakMultiplier(streak) {
   return roundMult(1 + Math.min(streak * STREAK_STEP, MAX_STREAK_MULT));
 }
 
-export function calculateClick({ cells, revealed, streak }) {
+// Calcula los valores base de un clic. Los comodines se aplican después,
+// en jokers.js, para mantener esta función simple y testeable.
+export function calculateClick({
+  cells,
+  revealed,
+  streak = 0,
+  rows,
+  cols,
+}) {
   let chips = 0;
   let numbered = 0;
+  let borderCells = 0;
+  let zeroRevealed = false;
 
   for (const index of revealed) {
     const cell = cells[index];
@@ -27,6 +37,19 @@ export function calculateClick({ cells, revealed, streak }) {
     if (cell.adjacent > 0) {
       chips += CHIP_PER_NUMBER * cell.adjacent;
       numbered += 1;
+    } else {
+      zeroRevealed = true;
+    }
+
+    if (
+      rows &&
+      cols &&
+      (cell.row === 0 ||
+        cell.col === 0 ||
+        cell.row === rows - 1 ||
+        cell.col === cols - 1)
+    ) {
+      borderCells += 1;
     }
   }
 
@@ -37,5 +60,9 @@ export function calculateClick({ cells, revealed, streak }) {
     numbered,
     mult,
     points: Math.round(chips * mult),
+    revealed: revealed.length,
+    borderCells,
+    zeroRevealed,
+    streak,
   };
 }

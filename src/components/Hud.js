@@ -1,5 +1,6 @@
 import { HEARTS } from '../game/balance';
 import { countFlags } from '../game/board';
+import { streakMultiplier } from '../game/scoring';
 
 function format(value) {
   return value.toLocaleString('es-ES');
@@ -8,6 +9,7 @@ function format(value) {
 export default function Hud({ state }) {
   const { board, config, score, target, hearts, clicksLeft, money, round } =
     state;
+  const { streak } = state;
 
   const progress = target > 0 ? Math.min(100, (score / target) * 100) : 0;
   const flagsUsed = board ? countFlags(board) : 0;
@@ -29,9 +31,22 @@ export default function Hud({ state }) {
             </span>
           ))}
         </span>
-        <span className={`badge clicks ${clicksLeft === 0 ? 'danger' : ''}`}>
-          {clicksLeft} clic{clicksLeft === 1 ? '' : 's'}
+        <span
+          className={`badge clicks ${clicksLeft === 0 ? 'danger' : ''}`}
+          aria-label={`${clicksLeft} movimientos restantes`}
+        >
+          {clicksLeft} mov.
         </span>
+        {streak > 0 && (
+          <span
+            className="badge streak"
+            title={`Racha de ${streak} clic${streak === 1 ? '' : 's'} seguro${
+              streak === 1 ? '' : 's'
+            }`}
+          >
+            ×{streakMultiplier(streak)}
+          </span>
+        )}
       </div>
 
       <div className="score-row">

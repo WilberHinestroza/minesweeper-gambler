@@ -57,9 +57,9 @@ Una run completa debería durar entre 15 y 30 minutos (8–12 rondas).
 | Recurso | Inicio | Se gasta en | Se recupera |
 |---|---|---|---|
 | **Vidas (♥)** | 3 | Pisar una mina (−1) | Comodines / eventos |
-| **Clics** | 5 por ronda | Revelar una casilla (−1) | No se recuperan dentro de la ronda |
+| **Clics** | 8 por ronda (hasta 13) | Revelar una casilla (−1) | No se recuperan dentro de la ronda |
 | **Dinero ($)** | 0 | Tienda, rerolls | Recompensa de ronda, comodines |
-| **Comodines** | 1 aleatorio | — | Tienda (máx. 5 espacios) |
+| **Comodines** | 1 gratis entre 3 | — | Tienda (máx. 5 espacios) |
 
 - **Bandera**: gratis, máximo igual al número de minas del tablero.
 - **Vidas a 0** → fin de run inmediato.
@@ -148,15 +148,15 @@ onFlag         -> reacciona a banderas
 | Comodín | Efecto | Precio |
 |---|---|---|
 | **Racha** | +0.25 mult extra por clic seguro consecutivo | $4 |
-| **Bomba de humo** | +2 mult por cada bandera colocada | $4 |
-| **Contador** | +1 mult por cada casilla con número revelada en el clic | $5 |
+| **Bomba de humo** | +2 mult por cada bandera acertada (máx. +8) | $4 |
+| **Contador** | +0.5 mult por cada casilla con número revelada en el clic (máx. +4) | $5 |
 | **Rayo** | El primer despeje de 0 de cada ronda duplica los chips | $6 |
 | **Seguro** | Ignora la primera mina de la run | $7 |
 | **Casco** | Ignora la primera mina de cada ronda | $6 |
-| **Detector** | Marca 1 mina aleatoria al empezar la ronda | $5 |
-| **Codicia** | +$1 por cada 100 puntos de la ronda | $5 |
+| **Detector** | Marca 1 mina aleatoria al colocar el tablero | $5 |
+| **Codicia** | +$1 por cada 100 puntos de la ronda (máx. +$5) | $5 |
 | **Duplicador** | ×1.5 mult si el clic revela 5+ casillas | $6 |
-| **Suertudo** | 10% de probabilidad de que una mina se revele como segura | $7 |
+| **Suertudo** | 10% de probabilidad de que una mina sea de fogueo | $7 |
 | **Interés** | +$1 por cada $5 al terminar la ronda (máx. +$3) | $4 |
 | **Borde** | +8 chips por cada casilla del borde del tablero revelada | $3 |
 
@@ -172,23 +172,25 @@ onFlag         -> reacciona a banderas
 
 ## 7. Balance inicial
 
-Objetivo y tablero por ronda. `objetivo(n) ≈ 500 × 1.6^(n-1)`.
+Objetivo y tablero por ronda. La curva inicial se ajustó simulando partidas:
+los objetivos tempranos son alcanzables con cualquier comodín inicial, y a
+partir de la ronda 9 el objetivo crece ×1.6 por ronda.
 
-| Ronda | Tablero | Minas | Objetivo | Recompensa base |
+| Ronda | Tablero | Minas | Objetivo | Movimientos |
 |---|---|---|---|---|
-| 1 | 8×8 | 10 | 500 | $3 |
-| 2 | 8×8 | 12 | 800 | $3 |
-| 3 | 9×9 | 15 | 1.300 | $4 |
-| 4 | 9×9 | 18 | 2.100 | $4 |
-| 5 | 10×10 | 22 | 3.400 | $5 |
-| 6 | 10×10 | 26 | 5.400 | $5 |
-| 7 | 12×12 | 34 | 8.600 | $6 |
-| 8 | 12×12 | 40 | 13.800 | $6 |
-| 9+ | +2 columnas/filas cada 2 rondas | +15% | ×1.6 | +$1 cada 3 |
+| 1 | 8×8 | 10 | 500 | 8 |
+| 2 | 8×8 | 12 | 750 | 8 |
+| 3 | 9×9 | 15 | 1.050 | 9 |
+| 4 | 9×9 | 18 | 1.450 | 9 |
+| 5 | 10×10 | 22 | 2.000 | 10 |
+| 6 | 10×10 | 26 | 2.700 | 10 |
+| 7 | 12×12 | 34 | 3.700 | 11 |
+| 8 | 12×12 | 40 | 5.000 | 11 |
+| 9+ | +2 columnas/filas cada 2 rondas | +15% | ×1.6 | +1 cada 2 rondas (máx. 13) |
 
 Los números son una hipótesis de partida; se ajustan jugando. La métrica clave:
-**¿cuántos clics sobran en una ronda típica?** Si sobran 3 de 5, el objetivo es
-demasiado bajo. Si nunca se alcanza sin comodines, es demasiado alto.
+**¿cuántos movimientos sobran en una ronda típica?** Si sobran 3 o más, el
+objetivo es demasiado bajo. Si nunca se alcanza, es demasiado alto.
 
 ### 7.1 Vidas
 
@@ -197,21 +199,23 @@ subir a 4 antes de tocar la puntuación.
 
 ---
 
-## 8. Pantallas (v0.1)
+## 8. Pantallas (v0.2)
 
-1. **Menú**: título, botón JUGAR, récord local (mejor ronda / mejor puntuación).
-2. **Ronda**:
-   - Barra superior: ronda, objetivo, puntos actuales, vidas, clics, dinero.
-   - Tablero central.
-   - Bandeja de comodines (con tooltip de efecto).
+1. **Menú**: título, reglas resumidas, botón JUGAR.
+2. **Elección inicial**: 3 comodines gratis; el jugador elige 1.
+3. **Ronda**:
+   - Barra superior: ronda, dinero, vidas, movimientos y racha actual.
+   - Objetivo con barra de progreso.
+   - Bandeja de comodines con tooltip de efecto.
+   - Tablero central y feedback por clic con las bonificaciones activadas.
    - Botón **COBRAR** cuando el objetivo está cumplido.
-3. **Tienda**: dinero, 3 ofertas, botón reroll, comodines equipados, botón
-   CONTINUAR.
-4. **Fin de run**: ronda alcanzada, puntos totales, dinero, comodines, botón
-   VOLVER A JUGAR.
+4. **Tienda**: recompensa desglosada, 3 ofertas, reroll, mazo con opción de
+   vender, y botón SIGUIENTE RONDA.
+5. **Fin de run**: ronda alcanzada, puntos totales, dinero, botón VOLVER A
+   JUGAR.
 
-Todo con HTML/CSS simple (grid para el tablero). Sin animaciones en v0.1 salvo
-transiciones de color para dar feedback.
+Todo con HTML/CSS simple (grid para el tablero). Las animaciones se limitan a
+transiciones de color/feedback y respetan `prefers-reduced-motion`.
 
 ---
 
@@ -225,54 +229,57 @@ src/
   game/
     rng.js        // PRNG con semilla (mulberry32) -> runs reproducibles y tests
     board.js      // crear tablero, colocar minas, revelar, despeje, banderas
-    scoring.js    // cálculo de chips/mult/puntos por clic
-    jokers.js     // definiciones + hooks
-    shop.js       // generación de ofertas y precios
+    scoring.js    // cálculo base de chips/mult/puntos por clic
+    jokers.js     // definiciones, efectos de puntuación, dinero y protección
+    shop.js       // generación de ofertas y precios de venta
     run.js        // reducer y máquina de estados de la run
     balance.js    // tablas de rondas, precios, constantes
   components/
-    App.jsx
-    MenuScreen.jsx
-    RoundScreen.jsx
-    Board.jsx
-    Cell.jsx
-    Hud.jsx
-    JokerTray.jsx
-    ShopScreen.jsx
-    RunOverScreen.jsx
-  hooks/
-    useRun.js
-  styles/
-    *.css
+    MenuScreen.js
+    StarterScreen.js
+    RoundScreen.js
+    Board.js
+    Cell.js
+    Hud.js
+    JokerCard.js
+    JokerBar.js
+    ShopScreen.js
+    RunOverScreen.js
+  App.js
+  App.css
+  index.css
   game/__tests__/
     board.test.js
     scoring.test.js
     jokers.test.js
+    shop.test.js
+    run.test.js
 ```
 
 ### 9.1 Estado de la run
 
 ```js
 {
-  phase: 'menu' | 'round' | 'shop' | 'runOver',
-  run: {
-    round: 1,
-    money: 0,
-    hearts: 3,
-    scoreTotal: 0,
-    seed: 123456,
-    jokers: [],
-  },
-  round: {
-    board: { cells, rows, cols, mines, flagsLeft },
-    target: 500,
-    score: 0,
-    clicksLeft: 5,
-    streak: 0,
-    flagsPlaced: [],
-    canCashOut: false,
-    destroyed: false,
-  },
+  phase: 'menu' | 'starter' | 'round' | 'shop' | 'runOver',
+  seed: 123456,
+  round: 1,
+  money: 0,
+  hearts: 3,
+  totalScore: 0,
+  jokers: [],          // ids de comodines equipados (máx. 5)
+  starterOffers: [],   // 3 ids durante la elección inicial
+  shop: { offers: [], rerollCost: 2, rerolls: 0 } | null,
+  config: { rows, cols, mines, target },
+  board: { cells, rows, cols, mines, minesPlaced, explodedIndex },
+  target: 500,
+  score: 0,
+  clicksLeft: 8,
+  streak: 0,
+  lastResult: { type: 'safe' | 'mine' | 'dud', chips, mult, points, triggers },
+  seguroUsed: false,
+  cascoUsed: false,
+  rayoUsed: false,
+  detectorUsed: false,
 }
 ```
 
@@ -280,34 +287,36 @@ src/
 
 - Toda la lógica de juego en `src/game/` debe ser **pura** y testeable sin React.
 - Nada de `Math.random()` dentro de la lógica: usar el RNG con semilla.
-- Los comodines se evalúan en orden de la lista equipada.
-- Los eventos de un clic devuelven un log (`[{type, value}]`) para poder pintar
-  feedback ("+125 chips", "×1.5") sin acoplar UI y lógica.
+- Los efectos se aplican en orden fijo: bonos aditivos de mult, bonos de chips y
+  después los multiplicadores `×Mult`.
+- Cada clic devuelve una lista de `triggers` (`[{id, name, symbol, label}]`)
+  para pintar el feedback ("+3 mult", "chips ×2") sin acoplar UI y lógica.
 
 ---
 
 ## 10. Roadmap
 
 ### Fase 1 — Núcleo jugable (sin comodines)
-- [ ] Generación de tablero con primer clic seguro.
-- [ ] Revelar + despeje automático + banderas.
-- [ ] Vidas, clics, puntuación y objetivo.
-- [ ] Cobrar / fin de run.
-- [ ] Pantallas de menú, ronda y fin de run.
-- [ ] Tests de tablero y puntuación.
+- [x] Generación de tablero con primer clic seguro.
+- [x] Revelar + despeje automático + banderas.
+- [x] Vidas, movimientos, puntuación y objetivo.
+- [x] Cobrar / fin de run.
+- [x] Pantallas de menú, ronda y fin de run.
+- [x] Tests de tablero y puntuación.
 
 ### Fase 2 — Motor de comodines y tienda
-- [ ] Sistema de hooks.
-- [ ] Los 12 comodines iniciales.
-- [ ] Tienda, reroll, vender, límite de espacios.
-- [ ] Feedback de puntuación por clic.
-- [ ] Tests de comodines.
+- [x] Sistema de efectos (puntuación, dinero y protección).
+- [x] Los 12 comodines iniciales.
+- [x] Elección de comodín inicial.
+- [x] Tienda, reroll, vender, límite de espacios.
+- [x] Feedback de puntuación por clic.
+- [x] Tests de comodines y tienda.
 
 ### Fase 3 — Pulido de prototipo
 - [ ] Persistencia local (récord, run en curso).
-- [ ] Ajuste de balance con partidas reales.
+- [x] Ajuste inicial de balance con simulaciones.
 - [ ] Sonido y animaciones mínimas.
-- [ ] Soporte táctil (long press para bandera).
+- [x] Soporte táctil (long press para bandera).
 - [ ] Chording.
 
 ### Fase 4 — Profundidad (post-prototipo)
