@@ -2,6 +2,7 @@
   "name": "minesweeper-gambler",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://wilberhinestrosa.github.io/minesweeper-gambler",
   "dependencies": {
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^6.9.1",
