@@ -201,6 +201,24 @@ export function toggleFlag(board, index) {
   return { board: { ...board, cells }, changed: true };
 }
 
+// Marca una mina oculta al azar. Devuelve null si ya no quedan minas que
+// marcar (por ejemplo, antes de colocar el tablero).
+export function flagRandomMine(board, rng) {
+  const mines = board.cells.filter(
+    (cell) => cell.mine && !cell.flagged && !cell.revealed
+  );
+  if (mines.length === 0) return null;
+
+  const target = mines[rng.int(mines.length)];
+
+  return {
+    ...board,
+    cells: board.cells.map((cell) =>
+      cell.index === target.index ? { ...cell, flagged: true } : cell
+    ),
+  };
+}
+
 export function countFlags(board) {
   return board.cells.reduce((total, cell) => total + (cell.flagged ? 1 : 0), 0);
 }

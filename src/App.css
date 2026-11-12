@@ -391,6 +391,86 @@ button.joker-card:disabled {
   border-color: #2a3a30;
 }
 
+/* ===== Talismanes ===== */
+
+.talisman-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(4px, 1vw, 8px);
+}
+
+.talisman-bar-label {
+  color: var(--muted);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.talisman-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 4px 9px 4px 6px;
+  border: 1px solid color-mix(in srgb, var(--talisman-color) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--talisman-color) 9%, transparent);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.74rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.12s ease;
+}
+
+.talisman-button:hover:not(:disabled) {
+  border-color: var(--talisman-color);
+  transform: translateY(-1px);
+}
+
+.talisman-button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.talisman-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.talisman-symbol {
+  color: var(--talisman-color);
+  font-weight: 800;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.talisman-name {
+  font-weight: 700;
+}
+
+.talisman-card {
+  min-height: 122px;
+}
+
+.talisman-owned {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.talisman-owned-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, var(--talisman-color) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--talisman-color) 9%, transparent);
+  color: var(--talisman-color);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 .score-row {
   display: flex;
   align-items: baseline;
@@ -450,6 +530,10 @@ button.joker-card:disabled {
 
 .feedback-dud {
   color: var(--green-bright);
+}
+
+.feedback-item {
+  color: var(--gold-soft);
 }
 
 .triggers {
@@ -707,6 +791,12 @@ button.joker-card:disabled {
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: var(--green-bright);
+}
+
+.section-note {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .shop-offers,

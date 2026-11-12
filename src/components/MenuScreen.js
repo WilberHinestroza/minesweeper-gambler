@@ -50,8 +50,10 @@ export default function MenuScreen({
             para pasar a la tienda y llevarte el dinero.
           </li>
           <li>
-            Entre rondas compra <strong>comodines</strong>: cambian la
-            puntuación, protegen de minas o dan dinero extra.
+            Entre rondas compra <strong>comodines</strong> y{' '}
+            <strong>talismanes</strong>: los comodines son permanentes; los
+            talismanes se gastan durante una ronda (movimientos, protección o
+            dinero).
           </li>
           <li>
             Cada 3 rondas aparece un <strong>jefe</strong> con una regla

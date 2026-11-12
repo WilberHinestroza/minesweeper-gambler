@@ -11,9 +11,11 @@ import { unlockAudio } from '../game/sound';
 import Board from './Board';
 import Hud from './Hud';
 import JokerBar from './JokerBar';
+import TalismanBar from './TalismanBar';
 
 const DUD_LABELS = {
   suertudo: '♣ Mina de fogueo: no pierdes vida',
+  amuleto: '✚ Amuleto activado: mina ignorada',
   seguro: '✚ Seguro activado: mina ignorada',
   casco: '⛑ Casco activado: mina ignorada',
 };
@@ -31,6 +33,14 @@ function Feedback({ result }) {
     return (
       <span className="feedback-dud">
         {DUD_LABELS[result.protection] ?? 'Mina desactivada'}
+      </span>
+    );
+  }
+
+  if (result.type === 'item') {
+    return (
+      <span className="feedback-item">
+        <span aria-hidden="true">{result.symbol}</span> {result.label}
       </span>
     );
   }
@@ -73,7 +83,8 @@ export default function RoundScreen({
     BASE_REWARD +
     state.clicksLeft +
     Math.min(correctFlags, MAX_FLAG_REWARD) +
-    moneyBonus.total;
+    moneyBonus.total +
+    (state.cofreBonus ?? 0);
   const boss = getBoss(state.boss);
   const reward = applyBossReward(rawReward, boss);
 
@@ -82,6 +93,12 @@ export default function RoundScreen({
       <Hud state={state} muted={muted} onToggleMute={onToggleMute} />
 
       <JokerBar jokers={state.jokers} />
+
+      <TalismanBar
+        talismans={state.talismans ?? []}
+        board={state.board}
+        onUse={(id) => act({ type: 'USE_TALISMAN', id })}
+      />
 
       <div className="feedback" key={state.lastResult?.id ?? 'idle'}>
         <Feedback result={state.lastResult} />

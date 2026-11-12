@@ -1,7 +1,13 @@
-import { MAX_JOKERS, getClicksForRound, getRoundConfig } from '../game/balance';
+import {
+  MAX_JOKERS,
+  MAX_TALISMANS,
+  getClicksForRound,
+  getRoundConfig,
+} from '../game/balance';
 import { applyBossConfig, getBossForRound } from '../game/bosses';
 import { getJoker } from '../game/jokers';
 import { sellValue } from '../game/shop';
+import { getTalisman } from '../game/talismans';
 import JokerCard from './JokerCard';
 
 function money(value) {
@@ -13,6 +19,9 @@ export default function ShopScreen({ state, dispatch }) {
   const nextBoss = getBossForRound(state.round + 1);
   const next = applyBossConfig(getRoundConfig(state.round + 1), nextBoss);
   const full = jokers.length >= MAX_JOKERS;
+  const talismans = state.talismans ?? [];
+  const talismanOffers = shop.talismans ?? [];
+  const talismanFull = talismans.length >= MAX_TALISMANS;
 
   return (
     <main className="screen shop-screen">
@@ -43,6 +52,12 @@ export default function ShopScreen({ state, dispatch }) {
             <li>
               <span>Interés</span>
               <span>+${info.interes}</span>
+            </li>
+          )}
+          {info.cofre > 0 && (
+            <li>
+              <span>Cofre</span>
+              <span>+${info.cofre}</span>
             </li>
           )}
           {info.tax > 0 && (
@@ -95,6 +110,62 @@ export default function ShopScreen({ state, dispatch }) {
         {full && (
           <p className="hint hint-warn">
             Mazo lleno ({MAX_JOKERS}/{MAX_JOKERS}). Vende un comodín para
+            hacer sitio.
+          </p>
+        )}
+      </section>
+
+      <section className="panel shop-section">
+        <div className="section-head">
+          <h2>Talismanes</h2>
+          <span className="section-note">
+            {talismans.length}/{MAX_TALISMANS}
+          </span>
+        </div>
+
+        {talismanOffers.length > 0 ? (
+          <div className="shop-offers">
+            {talismanOffers.map((id) => {
+              const talisman = getTalisman(id);
+              return (
+                <JokerCard
+                  key={id}
+                  joker={talisman}
+                  className="talisman-card"
+                  actionLabel="Comprar"
+                  footer={`$${talisman.price}`}
+                  disabled={talismanFull || cash < talisman.price}
+                  onClick={() => dispatch({ type: 'BUY_TALISMAN', id })}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <p className="hint">No hay más talismanes disponibles.</p>
+        )}
+
+        {talismans.length > 0 && (
+          <div className="shop-owned talisman-owned">
+            {talismans.map((id) => {
+              const talisman = getTalisman(id);
+              return (
+                <span
+                  key={id}
+                  className="talisman-owned-chip"
+                  style={{ '--talisman-color': talisman.color }}
+                  title={`${talisman.name}: ${talisman.description}`}
+                >
+                  <span aria-hidden="true">{talisman.symbol}</span>{' '}
+                  {talisman.name}
+                </span>
+              );
+            })}
+          </div>
+        )}
+
+        {talismanFull && (
+          <p className="hint hint-warn">
+            Inventario de talismanes lleno. Usa uno durante la ronda para
             hacer sitio.
           </p>
         )}

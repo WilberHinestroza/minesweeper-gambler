@@ -5,6 +5,7 @@ import {
   HEARTS,
   MAX_FLAG_REWARD,
   MAX_JOKERS,
+  MAX_TALISMANS,
   REROLL_BASE_COST,
   getClicksForRound,
   getRoundConfig,
@@ -20,6 +21,7 @@ import {
   countCorrectFlags,
   countFlags,
   createEmptyBoard,
+  flagRandomMine,
   revealCell,
   toggleFlag,
 } from './board';
@@ -34,7 +36,8 @@ import {
 } from './jokers';
 import { createRng } from './rng';
 import { calculateClick } from './scoring';
-import { rollShop, sellValue } from './shop';
+import { rollShop, rollTalismans, sellValue } from './shop';
+import { getTalisman } from './talismans';
 
 export function createInitialState(seed = Date.now()) {
   return {
@@ -45,6 +48,7 @@ export function createInitialState(seed = Date.now()) {
     hearts: HEARTS,
     totalScore: 0,
     jokers: [],
+    talismans: [],
     starterOffers: [],
     shop: null,
     config: null,
@@ -63,6 +67,8 @@ export function createInitialState(seed = Date.now()) {
     cascoUsed: false,
     rayoUsed: false,
     detectorUsed: false,
+    amuletoReady: false,
+    cofreBonus: 0,
   };
 }
 
@@ -98,6 +104,8 @@ export function startRound(state, round) {
     rayoUsed: false,
     cascoUsed: false,
     detectorUsed: false,
+    amuletoReady: false,
+    cofreBonus: 0,
   };
 }
 
@@ -142,6 +150,8 @@ function resolveOpen(state, result, rng, { placed = false } = {}) {
         detectorUsed,
         seguroUsed: state.seguroUsed || protection === 'seguro',
         cascoUsed: state.cascoUsed || protection === 'casco',
+        amuletoReady:
+          protection === 'amuleto' ? false : state.amuletoReady,
         lastResult: {
           type: 'dud',
           protection,
@@ -230,7 +240,17 @@ export function runReducer(state, action) {
         return state;
       }
 
-      return { ...saved, lastResult: null };
+      // Normaliza saves antiguos que no conocían los talismanes.
+      return {
+        ...saved,
+        lastResult: null,
+        talismans: saved.talismans ?? [],
+        amuletoReady: saved.amuletoReady ?? false,
+        cofreBonus: saved.cofreBonus ?? 0,
+        shop: saved.shop
+          ? { ...saved.shop, talismans: saved.shop.talismans ?? [] }
+          : saved.shop,
+      };
     }
 
     case 'MENU': {
@@ -288,8 +308,13 @@ export function runReducer(state, action) {
       const correctFlags = countCorrectFlags(state.board);
       const flagBonus = Math.min(correctFlags, MAX_FLAG_REWARD);
       const moneyJokers = applyMoneyJokers(state);
+      const cofre = state.cofreBonus ?? 0;
       const rawReward =
-        BASE_REWARD + state.clicksLeft + flagBonus + moneyJokers.total;
+        BASE_REWARD +
+        state.clicksLeft +
+        flagBonus +
+        moneyJokers.total +
+        cofre;
       const reward = applyBossReward(rawReward, boss);
       const rng = createRng(
         (state.seed ^ Math.imul(state.round, 0x27d4eb2d) ^ 0x5f3759df) >>> 0
@@ -308,11 +333,13 @@ export function runReducer(state, action) {
           flagBonus,
           codicia: moneyJokers.codicia,
           interes: moneyJokers.interes,
+          cofre,
           raw: rawReward,
           tax: rawReward - reward,
         },
         shop: {
           offers: rollShop(rng, state.jokers),
+          talismans: rollTalismans(rng, state.talismans ?? []),
           rerollCost: REROLL_BASE_COST,
           rerolls: 0,
         },
@@ -336,6 +363,91 @@ export function runReducer(state, action) {
           offers: state.shop.offers.filter((id) => id !== joker.id),
         },
       };
+    }
+
+    case 'BUY_TALISMAN': {
+      if (state.phase !== 'shop' || !state.shop) return state;
+      const offers = state.shop.talismans ?? [];
+      if (!offers.includes(action.id)) return state;
+
+      const owned = state.talismans ?? [];
+      if (owned.includes(action.id)) return state;
+      if (owned.length >= MAX_TALISMANS) return state;
+
+      const talisman = getTalisman(action.id);
+      if (!talisman || state.money < talisman.price) return state;
+
+      return {
+        ...state,
+        money: state.money - talisman.price,
+        talismans: [...owned, talisman.id],
+        shop: {
+          ...state.shop,
+          talismans: offers.filter((id) => id !== talisman.id),
+        },
+      };
+    }
+
+    case 'USE_TALISMAN': {
+      if (state.phase !== 'round') return state;
+
+      const owned = state.talismans ?? [];
+      if (!owned.includes(action.id)) return state;
+
+      const talisman = getTalisman(action.id);
+      if (!talisman) return state;
+
+      const clickId = state.clickId + 1;
+      const base = {
+        ...state,
+        talismans: owned.filter((id) => id !== action.id),
+        clickId,
+      };
+      const feedback = (label, extra = {}) => ({
+        ...base,
+        ...extra,
+        lastResult: {
+          type: 'item',
+          id: clickId,
+          symbol: talisman.symbol,
+          label,
+        },
+      });
+
+      if (action.id === 'pico') {
+        return feedback('+2 movimientos', {
+          clicksLeft: state.clicksLeft + 2,
+        });
+      }
+
+      if (action.id === 'amuleto') {
+        return feedback('Protección contra la próxima mina', {
+          amuletoReady: true,
+        });
+      }
+
+      if (action.id === 'cofre') {
+        return feedback('+$4 al cobrar esta ronda', {
+          cofreBonus: (state.cofreBonus ?? 0) + 4,
+        });
+      }
+
+      if (action.id === 'brujula') {
+        if (!state.board?.minesPlaced) return state;
+
+        const rng = createRng(
+          (state.seed ^
+            Math.imul(state.round, 0x9e3779b9) ^
+            Math.imul(clickId, 0x85ebca6b)) >>>
+            0
+        );
+        const board = flagRandomMine(state.board, rng);
+        if (!board) return state;
+
+        return feedback('Mina marcada', { board });
+      }
+
+      return state;
     }
 
     case 'SELL_JOKER': {
@@ -367,6 +479,7 @@ export function runReducer(state, action) {
         money: state.money - state.shop.rerollCost,
         shop: {
           offers: rollShop(rng, state.jokers),
+          talismans: rollTalismans(rng, state.talismans ?? []),
           rerolls,
           rerollCost: state.shop.rerollCost + 1,
         },

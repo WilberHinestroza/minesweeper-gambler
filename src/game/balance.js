@@ -3,7 +3,9 @@
 export const HEARTS = 3;
 
 export const MAX_JOKERS = 5;
+export const MAX_TALISMANS = 3;
 export const SHOP_OFFERS = 3;
+export const SHOP_TALISMAN_OFFERS = 2;
 export const REROLL_BASE_COST = 2;
 
 export const STREAK_STEP = 0.5; // mult extra por clic seguro consecutivo

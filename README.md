@@ -6,8 +6,8 @@ El diseño del juego está en [DESIGN.md](DESIGN.md).
 
 ## Estado
 
-Fase 3 jugable: buscaminas de casino con comodines, tienda, jefes y
-persistencia local.
+Fase 4 jugable: buscaminas de casino con comodines, talismanes, tienda, jefes
+y persistencia local.
 
 - Tablero con **primer clic seguro**, despeje automático y banderas.
 - **3 vidas** y **8 movimientos** al empezar, que suben hasta 13 en rondas
@@ -15,8 +15,11 @@ persistencia local.
 - Puntuación **chips × mult** con racha por clics seguros consecutivos.
 - **12 comodines** con efectos sobre puntuación, protección de minas y dinero.
 - Elige **1 comodín inicial gratis** entre 3 opciones.
-- Entre rondas: tienda con 3 ofertas, re-tirar y vender comodines.
-- Mazo de hasta **5 comodines**.
+- Entre rondas: tienda con comodines, **talismanes de un solo uso**, re-tirar y
+  vender comodines.
+- Mazo de hasta **5 comodines** y mochila de hasta **3 talismanes**.
+- **4 talismanes**: pico (+2 movimientos), amuleto (ignora una mina), brújula
+  (marca una mina) y cofre (+$4 al cobrar). Se activan durante la ronda.
 - Cobra al superar el objetivo: base + movimientos sobrantes + banderas
   acertadas + bonus de comodines.
 - **Chording**: pulsa un número con sus banderas puestas para abrir las
@@ -33,8 +36,8 @@ Controles:
   También hay un botón para cambiar entre modo cavar y modo bandera.
 - Pulsa un número revelado para hacer chording cuando sus banderas coincidan.
 
-Pendiente para siguientes fases: más jefes, consumibles, reto diario y
-progresión meta.
+Pendiente para siguientes fases: más jefes, reto diario, progresión meta y arte
+definitivo.
 
 ## Desarrollo
 

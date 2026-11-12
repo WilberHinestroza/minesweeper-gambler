@@ -2,8 +2,8 @@
 
 > Buscaminas + apuestas + construcción de motor estilo Balatro.
 > Alcance actual: **prototipo funcional** con sonido sintetizado, persistencia
-> local y rondas jefe. UI mínima, toda la energía en que el loop sea divertido y
-> legible.
+> local, rondas jefe y talismanes de un solo uso. UI mínima, toda la energía en
+> que el loop sea divertido y legible.
 
 ---
 
@@ -90,7 +90,25 @@ Una run completa debería durar entre 15 y 30 minutos (8–12 rondas).
 - La racha segura se reinicia.
 - Ciertos comodines pueden anular la pérdida de vida (una vez).
 
-### 4.4 Rondas jefe
+### 4.4 Talismanes
+
+Los talismanes son consumibles de un solo uso que se compran en la tienda y se
+activan desde la ronda. La mochila admite hasta **3** y el inventario es un
+conjunto: no se pueden tener dos copias del mismo talismán. Se guardan entre
+rondas, pero sus efectos temporales se reinician al empezar cada ronda.
+
+| Talismán | Precio | Efecto |
+|---|---:|---|
+| **Pico de repuesto** | $4 | +2 movimientos en la ronda actual. |
+| **Amuleto** | $4 | Ignora la próxima mina de la ronda. |
+| **Brújula** | $3 | Marca (abandera) una mina aleatoria del tablero. |
+| **Cofre** | $3 | +$4 extra al cobrar esta ronda. |
+
+La brújula necesita que el tablero ya esté colocado (el primer clic debe
+haberse hecho). El pico puede usarse incluso con 0 movimientos si la ronda
+sigue abierta, para intentar llegar al objetivo.
+
+### 4.5 Rondas jefe
 
 Cada 3 rondas la partida entra en una **ronda jefe**. El jefe se anuncia en el
 HUD y en la vista previa de la tienda:
@@ -257,6 +275,7 @@ src/
     board.js      // crear tablero, colocar minas, revelar, despeje, banderas
     scoring.js    // cálculo base de chips/mult/puntos por clic
     jokers.js     // definiciones, efectos de puntuación, dinero y protección
+    talismans.js  // consumibles de un solo uso
     shop.js       // generación de ofertas y precios de venta
     bosses.js     // rondas jefe y modificadores
     storage.js    // persistencia de run, récords y preferencias
@@ -272,6 +291,7 @@ src/
     Hud.js
     JokerCard.js
     JokerBar.js
+    TalismanBar.js
     ShopScreen.js
     RunOverScreen.js
   App.js
@@ -281,6 +301,7 @@ src/
     board.test.js
     scoring.test.js
     jokers.test.js
+    talismans.test.js
     shop.test.js
     bosses.test.js
     storage.test.js
@@ -298,8 +319,9 @@ src/
   hearts: 3,
   totalScore: 0,
   jokers: [],          // ids de comodines equipados (máx. 5)
+  talismans: [],       // ids de consumibles en la mochila (máx. 3)
   starterOffers: [],   // 3 ids durante la elección inicial
-  shop: { offers: [], rerollCost: 2, rerolls: 0 } | null,
+  shop: { offers: [], talismans: [], rerollCost: 2, rerolls: 0 } | null,
   config: { rows, cols, mines, target },
   boss: null | 'tax' | 'mines',
   board: { cells, rows, cols, mines, minesPlaced, explodedIndex },
@@ -307,11 +329,13 @@ src/
   score: 0,
   clicksLeft: 8,
   streak: 0,
-  lastResult: { type: 'safe' | 'mine' | 'dud', chips, mult, points, triggers },
+  lastResult: { type: 'safe' | 'mine' | 'dud' | 'item', ... },
   seguroUsed: false,
   cascoUsed: false,
   rayoUsed: false,
   detectorUsed: false,
+  amuletoReady: false, // protección de ronda comprada con un talismán
+  cofreBonus: 0,       // dinero extra al cobrar con el talismán Cofre
 }
 ```
 
@@ -353,8 +377,8 @@ src/
 - [x] Rondas jefe cada 3 rondas (impuesto / minas extra).
 
 ### Fase 4 — Profundidad (post-prototipo)
+- [x] Consumibles de un solo uso (talismanes).
 - [ ] Más jefes (sin despeje, minas ocultas, campo minado extra).
-- [ ] Consumibles (una vez por ronda).
 - [ ] Semilla diaria / reto compartido.
 - [ ] Progresión meta (desbloquear comodines).
 - [ ] Arte definitivo de tablero y comodines.

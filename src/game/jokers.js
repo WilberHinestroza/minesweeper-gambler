@@ -1,6 +1,7 @@
 // Definiciones de comodines y sus efectos.
 // Los hooks son funciones puras que reciben el estado y devuelven bonificaciones.
 
+import { flagRandomMine } from './board';
 import { roundMult } from './scoring';
 
 export const JOKERS = [
@@ -121,6 +122,7 @@ export function hasJoker(state, id) {
 // Devuelve el tipo de protección si la mina no debe explotar.
 export function getMineProtection(state, rng) {
   if (hasJoker(state, 'suertudo') && rng.next() < 0.1) return 'suertudo';
+  if (state.amuletoReady) return 'amuleto';
   if (hasJoker(state, 'seguro') && !state.seguroUsed) return 'seguro';
   if (hasJoker(state, 'casco') && !state.cascoUsed) return 'casco';
   return null;
@@ -129,20 +131,7 @@ export function getMineProtection(state, rng) {
 // Detector: abandera una mina aleatoria después de colocar el tablero.
 export function applyDetector(board, state, rng) {
   if (!hasJoker(state, 'detector')) return board;
-
-  const mines = board.cells.filter(
-    (cell) => cell.mine && !cell.flagged && !cell.revealed
-  );
-  if (mines.length === 0) return board;
-
-  const target = mines[rng.int(mines.length)];
-
-  return {
-    ...board,
-    cells: board.cells.map((cell) =>
-      cell.index === target.index ? { ...cell, flagged: true } : cell
-    ),
-  };
+  return flagRandomMine(board, rng) ?? board;
 }
 
 // Aplica los comodines que modifican la puntuación de un clic.

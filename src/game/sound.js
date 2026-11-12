@@ -77,6 +77,10 @@ export function playSound(name) {
       tone(880, 0, 0.07, 'triangle', 0.04);
       tone(1174, 0.06, 0.1, 'triangle', 0.04);
       break;
+    case 'item':
+      tone(660, 0, 0.08, 'sine', 0.05);
+      tone(990, 0.07, 0.12, 'sine', 0.04);
+      break;
     case 'click':
       tone(300, 0, 0.04, 'square', 0.02);
       break;
