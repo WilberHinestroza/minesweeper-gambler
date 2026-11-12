@@ -6,7 +6,8 @@ El diseño del juego está en [DESIGN.md](DESIGN.md).
 
 ## Estado
 
-Fase 2 jugable: buscaminas de casino con comodines y tienda.
+Fase 3 jugable: buscaminas de casino con comodines, tienda, jefes y
+persistencia local.
 
 - Tablero con **primer clic seguro**, despeje automático y banderas.
 - **3 vidas** y **8 movimientos** al empezar, que suben hasta 13 en rondas
@@ -18,15 +19,22 @@ Fase 2 jugable: buscaminas de casino con comodines y tienda.
 - Mazo de hasta **5 comodines**.
 - Cobra al superar el objetivo: base + movimientos sobrantes + banderas
   acertadas + bonus de comodines.
+- **Chording**: pulsa un número con sus banderas puestas para abrir las
+  casillas de alrededor (cuesta 1 movimiento).
+- **Rondas jefe** cada 3 rondas: El Recaudador recorta la recompensa y La Mina
+  Madre añade un 30% de minas.
+- **Persistencia local**: continúa la run al recargar y guarda tus récords.
+- **Sonido sintetizado** con opción de silenciar.
 
 Controles:
 
 - **PC**: clic izquierdo para cavar, clic derecho para poner bandera.
 - **Móvil**: tocar para cavar, mantener pulsada una casilla para poner bandera.
   También hay un botón para cambiar entre modo cavar y modo bandera.
+- Pulsa un número revelado para hacer chording cuando sus banderas coincidan.
 
-Pendiente para siguientes fases: jefes, más tipos de comodines y progresión
-meta.
+Pendiente para siguientes fases: más jefes, consumibles, reto diario y
+progresión meta.
 
 ## Desarrollo
 

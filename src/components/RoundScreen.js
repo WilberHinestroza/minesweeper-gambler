@@ -5,7 +5,9 @@ import {
   getClicksForRound,
 } from '../game/balance';
 import { countCorrectFlags } from '../game/board';
+import { applyBossReward, getBoss } from '../game/bosses';
 import { applyMoneyJokers } from '../game/jokers';
+import { unlockAudio } from '../game/sound';
 import Board from './Board';
 import Hud from './Hud';
 import JokerBar from './JokerBar';
@@ -51,21 +53,33 @@ function Feedback({ result }) {
   );
 }
 
-export default function RoundScreen({ state, dispatch }) {
+export default function RoundScreen({
+  state,
+  dispatch,
+  muted,
+  onToggleMute,
+}) {
   const [flagMode, setFlagMode] = useState(false);
+
+  const act = (action) => {
+    unlockAudio();
+    dispatch(action);
+  };
 
   const canCashOut = state.score >= state.target;
   const correctFlags = countCorrectFlags(state.board);
   const moneyBonus = applyMoneyJokers(state);
-  const reward =
+  const rawReward =
     BASE_REWARD +
     state.clicksLeft +
     Math.min(correctFlags, MAX_FLAG_REWARD) +
     moneyBonus.total;
+  const boss = getBoss(state.boss);
+  const reward = applyBossReward(rawReward, boss);
 
   return (
     <main className="screen round-screen">
-      <Hud state={state} />
+      <Hud state={state} muted={muted} onToggleMute={onToggleMute} />
 
       <JokerBar jokers={state.jokers} />
 
@@ -75,8 +89,9 @@ export default function RoundScreen({ state, dispatch }) {
 
       <Board
         board={state.board}
-        onReveal={(index) => dispatch({ type: 'REVEAL', index })}
-        onFlag={(index) => dispatch({ type: 'FLAG', index })}
+        onReveal={(index) => act({ type: 'REVEAL', index })}
+        onFlag={(index) => act({ type: 'FLAG', index })}
+        onChord={(index) => act({ type: 'CHORD', index })}
         flagMode={flagMode}
         disabled={state.clicksLeft <= 0}
         explodedIndex={state.board.explodedIndex}
@@ -96,7 +111,7 @@ export default function RoundScreen({ state, dispatch }) {
           <button
             type="button"
             className="btn primary cashout"
-            onClick={() => dispatch({ type: 'CASH_OUT' })}
+            onClick={() => act({ type: 'CASH_OUT' })}
           >
             COBRAR ${reward}
           </button>
@@ -111,6 +126,11 @@ export default function RoundScreen({ state, dispatch }) {
       <p className="hint hint-touch">
         Toca para cavar. Mantén pulsada una casilla para poner bandera. En PC
         también puedes usar clic derecho.
+      </p>
+
+      <p className="hint hint-chord">
+        Toca un número con sus banderas puestas para abrir las casillas de
+        alrededor (cuesta 1 movimiento).
       </p>
 
       <p className="hint hint-flags">

@@ -1,11 +1,28 @@
 import {
+  chordCell,
   countFlags,
   createEmptyBoard,
+  neighborsOf,
   placeMines,
   revealCell,
   toggleFlag,
 } from '../board';
 import { createRng } from '../rng';
+
+function boardWithMines(rows, cols, mineIndexes) {
+  const base = createEmptyBoard(rows, cols, mineIndexes.length);
+  const mined = base.cells.map((cell) => ({
+    ...cell,
+    mine: mineIndexes.includes(cell.index),
+  }));
+  const cells = mined.map((cell) => ({
+    ...cell,
+    adjacent: neighborsOf(cell.index, rows, cols).filter((n) => mined[n].mine)
+      .length,
+  }));
+
+  return { ...base, cells, minesPlaced: true };
+}
 
 describe('board', () => {
   test('el primer clic siempre es seguro y coloca todas las minas', () => {
@@ -68,6 +85,58 @@ describe('board', () => {
     const board = result.board;
 
     expect(toggleFlag(board, 12).changed).toBe(false);
+  });
+
+  test('el chording abre las vecinas si las banderas coinciden', () => {
+    const base = boardWithMines(3, 3, [0]);
+    const board = {
+      ...base,
+      cells: base.cells.map((cell) => {
+        if (cell.index === 4) return { ...cell, revealed: true };
+        if (cell.index === 0) return { ...cell, flagged: true };
+        return cell;
+      }),
+    };
+
+    const result = chordCell(board, 4, createRng(1));
+
+    expect(result.hitMine).toBe(false);
+    expect(result.revealed).toHaveLength(7);
+    expect(result.board.cells[0].revealed).toBe(false);
+    expect(result.board.cells[0].flagged).toBe(true);
+  });
+
+  test('el chording con una bandera incorrecta detona la mina', () => {
+    const base = boardWithMines(3, 3, [0]);
+    const board = {
+      ...base,
+      cells: base.cells.map((cell) => {
+        if (cell.index === 4) return { ...cell, revealed: true };
+        if (cell.index === 8) return { ...cell, flagged: true };
+        return cell;
+      }),
+    };
+
+    const result = chordCell(board, 4, createRng(1));
+
+    expect(result.hitMine).toBe(true);
+    expect(result.board.explodedIndex).toBe(0);
+    expect(result.revealed).toContain(0);
+  });
+
+  test('el chording no hace nada si faltan banderas', () => {
+    const base = boardWithMines(3, 3, [0]);
+    const board = {
+      ...base,
+      cells: base.cells.map((cell) =>
+        cell.index === 4 ? { ...cell, revealed: true } : cell
+      ),
+    };
+
+    const result = chordCell(board, 4, createRng(1));
+
+    expect(result.revealed).toEqual([]);
+    expect(result.hitMine).toBe(false);
   });
 
   test('detectar una mina marca la explosión', () => {

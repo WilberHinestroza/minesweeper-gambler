@@ -136,6 +136,55 @@ export function revealCell(board, index, rng) {
   return { board: { ...working, cells }, revealed, hitMine: false, placed };
 }
 
+// Chording: abrir las casillas ocultas alrededor de un número cuando ya hay
+// tantas banderas como minas indica. Si alguna bandera es incorrecta, la
+// casilla minada detona como en el buscaminas clásico.
+export function chordCell(board, index, rng) {
+  const origin = board.cells[index];
+
+  if (
+    !board.minesPlaced ||
+    !origin ||
+    !origin.revealed ||
+    origin.adjacent <= 0
+  ) {
+    return { board, revealed: [], hitMine: false };
+  }
+
+  const neighbors = neighborsOf(index, board.rows, board.cols);
+  const flags = neighbors.filter((n) => board.cells[n].flagged).length;
+
+  if (flags !== origin.adjacent) {
+    return { board, revealed: [], hitMine: false };
+  }
+
+  const targets = neighbors.filter((n) => {
+    const cell = board.cells[n];
+    return !cell.revealed && !cell.flagged;
+  });
+
+  if (targets.length === 0) {
+    return { board, revealed: [], hitMine: false };
+  }
+
+  let working = board;
+  const revealed = [];
+
+  for (const target of targets) {
+    const result = revealCell(working, target, rng);
+    if (result.revealed.length === 0) continue;
+
+    working = result.board;
+    revealed.push(...result.revealed);
+
+    if (result.hitMine) {
+      return { board: working, revealed, hitMine: true };
+    }
+  }
+
+  return { board: working, revealed, hitMine: false };
+}
+
 export function toggleFlag(board, index) {
   const cell = board.cells[index];
   if (!cell || cell.revealed) return { board, changed: false };

@@ -4,6 +4,7 @@ export default function Board({
   board,
   onReveal,
   onFlag,
+  onChord,
   flagMode,
   disabled,
   explodedIndex,
@@ -22,6 +23,7 @@ export default function Board({
           cell={cell}
           onReveal={onReveal}
           onFlag={onFlag}
+          onChord={onChord}
           flagMode={flagMode}
           disabled={disabled}
           explodedIndex={explodedIndex}

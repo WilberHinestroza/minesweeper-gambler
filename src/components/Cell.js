@@ -6,6 +6,7 @@ export default function Cell({
   cell,
   onReveal,
   onFlag,
+  onChord,
   flagMode,
   disabled,
   explodedIndex,
@@ -49,13 +50,20 @@ export default function Cell({
       return;
     }
 
+    // Un número ya revelado se usa para el chording: abre sus vecinas si
+    // las banderas ya coinciden con el número, incluso en modo bandera.
+    if (cell.revealed) {
+      if (cell.adjacent > 0) onChord?.(cell.index);
+      return;
+    }
+
     if (flagMode) onFlag(cell.index);
     else onReveal(cell.index);
   };
 
   const handleContextMenu = (event) => {
     event.preventDefault();
-    if (!disabled) onFlag(cell.index);
+    if (!disabled && !cell.revealed) onFlag(cell.index);
   };
 
   const classes = ['cell'];
@@ -78,7 +86,8 @@ export default function Cell({
     } else if (cell.adjacent > 0) {
       classes.push(`n${cell.adjacent}`);
       content = cell.adjacent;
-      label = `${label}, ${cell.adjacent} mina${cell.adjacent === 1 ? '' : 's'} alrededor`;
+      label = `${label}, ${cell.adjacent} mina${cell.adjacent === 1 ? '' : 's'} alrededor. Pulsa para abrir las vecinas si las banderas coinciden`;
+      if (!disabled) classes.push('chordable');
     } else {
       label = `${label}, casilla vacía`;
     }

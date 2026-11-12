@@ -1,4 +1,5 @@
 import { MAX_JOKERS, getClicksForRound, getRoundConfig } from '../game/balance';
+import { applyBossConfig, getBossForRound } from '../game/bosses';
 import { getJoker } from '../game/jokers';
 import { sellValue } from '../game/shop';
 import JokerCard from './JokerCard';
@@ -9,7 +10,8 @@ function money(value) {
 
 export default function ShopScreen({ state, dispatch }) {
   const { clearedInfo: info, shop, jokers, money: cash, reward } = state;
-  const next = getRoundConfig(state.round + 1);
+  const nextBoss = getBossForRound(state.round + 1);
+  const next = applyBossConfig(getRoundConfig(state.round + 1), nextBoss);
   const full = jokers.length >= MAX_JOKERS;
 
   return (
@@ -41,6 +43,12 @@ export default function ShopScreen({ state, dispatch }) {
             <li>
               <span>Interés</span>
               <span>+${info.interes}</span>
+            </li>
+          )}
+          {info.tax > 0 && (
+            <li className="penalty">
+              <span>Impuesto de El Recaudador</span>
+              <span>−${info.tax}</span>
             </li>
           )}
         </ul>
@@ -136,6 +144,16 @@ export default function ShopScreen({ state, dispatch }) {
           {next.rows}×{next.cols} · {next.mines} minas ·{' '}
           {getClicksForRound(state.round + 1)} movimientos
         </span>
+        {nextBoss && (
+          <span
+            className="next-boss"
+            style={{ '--boss-color': nextBoss.color }}
+            aria-label={`Próxima ronda jefe: ${nextBoss.name}. ${nextBoss.description}`}
+          >
+            <span aria-hidden="true">{nextBoss.symbol}</span> Ronda jefe:{' '}
+            {nextBoss.name} — {nextBoss.description}
+          </span>
+        )}
       </div>
 
       <button

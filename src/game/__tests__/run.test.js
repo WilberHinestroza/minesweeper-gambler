@@ -1,6 +1,7 @@
 import { getClicksForRound, getRoundConfig } from '../balance';
+import { createEmptyBoard, neighborsOf } from '../board';
 import { STARTER_JOKERS } from '../jokers';
-import { createInitialState, runReducer } from '../run';
+import { createInitialState, runReducer, startRound } from '../run';
 
 function begun(seed = 12345) {
   return runReducer(createInitialState(seed), { type: 'START_RUN', seed });
@@ -25,6 +26,29 @@ function withMineOnFirstCell(state, extra = {}) {
 
 function noJokers(state) {
   return { ...state, jokers: [] };
+}
+
+function chordingState(state, wrongFlag = false) {
+  const base = createEmptyBoard(3, 3, 1);
+  const mined = base.cells.map((cell) => ({
+    ...cell,
+    mine: cell.index === 0,
+  }));
+  const cells = mined.map((cell) => ({
+    ...cell,
+    adjacent: neighborsOf(cell.index, 3, 3).filter((n) => mined[n].mine)
+      .length,
+    revealed: cell.index === 4,
+    flagged: cell.index === (wrongFlag ? 8 : 0),
+  }));
+
+  return {
+    ...state,
+    board: { ...base, cells, minesPlaced: true },
+    clicksLeft: 5,
+    score: 0,
+    streak: 0,
+  };
 }
 
 describe('run', () => {
@@ -299,5 +323,78 @@ describe('run', () => {
     };
 
     expect(runReducer(base, { type: 'REROLL_SHOP' })).toBe(base);
+  });
+
+  test('la ronda 3 es jefe de impuesto y la 6 de minas extra', () => {
+    const tax = startRound(started(), 3);
+    expect(tax.boss).toBe('tax');
+    expect(tax.config.mines).toBe(getRoundConfig(3).mines);
+    expect(tax.target).toBe(getRoundConfig(3).target);
+
+    const mines = startRound(started(), 6);
+    expect(mines.boss).toBe('mines');
+    expect(mines.config.mines).toBe(34);
+    expect(mines.board.mines).toBe(34);
+  });
+
+  test('El Recaudador recorta el cobro de la ronda jefe', () => {
+    const base = {
+      ...started(),
+      boss: 'tax',
+      round: 3,
+      jokers: [],
+      score: 9999,
+      clicksLeft: 8,
+    };
+
+    const state = runReducer(base, { type: 'CASH_OUT' });
+
+    expect(state.clearedInfo.raw).toBe(11);
+    expect(state.clearedInfo.tax).toBe(2);
+    expect(state.reward).toBe(9);
+    expect(state.money).toBe(9);
+  });
+
+  test('el chording cuesta un movimiento y puntúa las casillas abiertas', () => {
+    const state = runReducer(chordingState(noJokers(started())), {
+      type: 'CHORD',
+      index: 4,
+    });
+
+    expect(state.clicksLeft).toBe(4);
+    expect(state.score).toBeGreaterThan(0);
+    expect(state.streak).toBe(1);
+    expect(state.lastResult.type).toBe('safe');
+    expect(state.board.cells[0].revealed).toBe(false);
+    expect(
+      state.board.cells.filter((cell) => cell.revealed && !cell.mine)
+    ).toHaveLength(8);
+  });
+
+  test('el chording con bandera incorrecta hace explotar la mina', () => {
+    const state = runReducer(chordingState(noJokers(started()), true), {
+      type: 'CHORD',
+      index: 4,
+    });
+
+    expect(state.hearts).toBe(2);
+    expect(state.clicksLeft).toBe(4);
+    expect(state.score).toBe(0);
+    expect(state.lastResult.type).toBe('mine');
+    expect(state.board.explodedIndex).toBe(0);
+  });
+
+  test('RESUME_RUN recupera una run guardada sin repetir el último feedback', () => {
+    const saved = {
+      ...started(),
+      lastResult: { type: 'safe', id: 9 },
+    };
+    const state = runReducer(begun(), { type: 'RESUME_RUN', state: saved });
+
+    expect(state.phase).toBe('round');
+    expect(state.round).toBe(1);
+    expect(state.board).toBe(saved.board);
+    expect(state.jokers).toEqual(saved.jokers);
+    expect(state.lastResult).toBeNull();
   });
 });

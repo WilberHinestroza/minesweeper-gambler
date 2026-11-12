@@ -1,8 +1,9 @@
 # MINA FORTUNA — Documento de diseño (v0.1)
 
 > Buscaminas + apuestas + construcción de motor estilo Balatro.
-> Alcance actual: **prototipo funcional**, sin arte ni sonido. UI mínima, toda la
-> energía en que el loop sea divertido y legible.
+> Alcance actual: **prototipo funcional** con sonido sintetizado, persistencia
+> local y rondas jefe. UI mínima, toda la energía en que el loop sea divertido y
+> legible.
 
 ---
 
@@ -40,6 +41,7 @@ Menú
  └─> RONDA (campo de minas + objetivo)
        ├─ clic izquierdo: revelar (cuesta 1 clic)
        ├─ clic derecho: abanderar (gratis)
+       ├─ clic en número con banderas correctas: chording (cuesta 1 clic)
        ├─ objetivo alcanzado -> botón COBRAR
        │     └─ recompensa en $ + TIENDA
        │           └─ comprar comodines -> siguiente ronda (más difícil)
@@ -75,8 +77,10 @@ Una run completa debería durar entre 15 y 30 minutos (8–12 rondas).
 - Despeje automático clásico: una casilla con 0 revela en cascada sus vecinas y
   los números del borde.
 - Las banderas bloquean el clic izquierdo sobre esa casilla.
-- Sin *chording* en v0.1 (clic sobre número con banderas correctas). Se evalúa
-  para v0.2.
+- **Chording**: pulsar un número ya revelado cuyas banderas coinciden con su
+  valor abre todas las casillas ocultas de alrededor. Cuesta 1 movimiento y, si
+  alguna bandera era incorrecta, la mina destapa y explota como en el
+  buscaminas clásico.
 
 ### 4.3 Pisar una mina
 
@@ -85,6 +89,20 @@ Una run completa debería durar entre 15 y 30 minutos (8–12 rondas).
 - La mina queda visible.
 - La racha segura se reinicia.
 - Ciertos comodines pueden anular la pérdida de vida (una vez).
+
+### 4.4 Rondas jefe
+
+Cada 3 rondas la partida entra en una **ronda jefe**. El jefe se anuncia en el
+HUD y en la vista previa de la tienda:
+
+| Ronda | Jefe | Efecto |
+|---|---|---|
+| 3, 9, 15… | **El Recaudador** | La recompensa al cobrar baja $2 (mínimo $1). |
+| 6, 12, 18… | **La Mina Madre** | La ronda tiene un 30% más de minas. |
+
+Los jefes alternan para que la presión no sea siempre la misma: una ronda jefe
+castiga la economía y la siguiente castiga la deducción. El objetivo y los
+movimientos no cambian.
 
 ---
 
@@ -201,18 +219,26 @@ subir a 4 antes de tocar la puntuación.
 
 ## 8. Pantallas (v0.2)
 
-1. **Menú**: título, reglas resumidas, botón JUGAR.
+1. **Menú**: título, reglas resumidas, récords locales, botón JUGAR y botón
+   CONTINUAR si hay una run guardada.
 2. **Elección inicial**: 3 comodines gratis; el jugador elige 1.
 3. **Ronda**:
-   - Barra superior: ronda, dinero, vidas, movimientos y racha actual.
+   - Barra superior: ronda, dinero, vidas, movimientos, racha y control de
+     sonido.
+   - Banner de jefe cuando la ronda lo tiene.
    - Objetivo con barra de progreso.
    - Bandeja de comodines con tooltip de efecto.
    - Tablero central y feedback por clic con las bonificaciones activadas.
    - Botón **COBRAR** cuando el objetivo está cumplido.
-4. **Tienda**: recompensa desglosada, 3 ofertas, reroll, mazo con opción de
-   vender, y botón SIGUIENTE RONDA.
-5. **Fin de run**: ronda alcanzada, puntos totales, dinero, botón VOLVER A
-   JUGAR.
+4. **Tienda**: recompensa desglosada (incluido el impuesto del jefe), 3 ofertas,
+   reroll, mazo con opción de vender, aviso de la próxima ronda jefe y botón
+   SIGUIENTE RONDA.
+5. **Fin de run**: ronda alcanzada, puntos totales, dinero, récord personal y
+   botones VOLVER A JUGAR / MENÚ PRINCIPAL.
+
+La run en curso se guarda en `localStorage` tras cada acción y se puede
+continuar al recargar. Los récords (mejor ronda, puntuación y dinero) y la
+preferencia de sonido también persisten.
 
 Todo con HTML/CSS simple (grid para el tablero). Las animaciones se limitan a
 transiciones de color/feedback y respetan `prefers-reduced-motion`.
@@ -232,6 +258,9 @@ src/
     scoring.js    // cálculo base de chips/mult/puntos por clic
     jokers.js     // definiciones, efectos de puntuación, dinero y protección
     shop.js       // generación de ofertas y precios de venta
+    bosses.js     // rondas jefe y modificadores
+    storage.js    // persistencia de run, récords y preferencias
+    sound.js      // efectos sintetizados con Web Audio API
     run.js        // reducer y máquina de estados de la run
     balance.js    // tablas de rondas, precios, constantes
   components/
@@ -253,6 +282,8 @@ src/
     scoring.test.js
     jokers.test.js
     shop.test.js
+    bosses.test.js
+    storage.test.js
     run.test.js
 ```
 
@@ -270,6 +301,7 @@ src/
   starterOffers: [],   // 3 ids durante la elección inicial
   shop: { offers: [], rerollCost: 2, rerolls: 0 } | null,
   config: { rows, cols, mines, target },
+  boss: null | 'tax' | 'mines',
   board: { cells, rows, cols, mines, minesPlaced, explodedIndex },
   target: 500,
   score: 0,
@@ -313,18 +345,19 @@ src/
 - [x] Tests de comodines y tienda.
 
 ### Fase 3 — Pulido de prototipo
-- [ ] Persistencia local (récord, run en curso).
+- [x] Persistencia local (récord, run en curso y preferencias).
 - [x] Ajuste inicial de balance con simulaciones.
-- [ ] Sonido y animaciones mínimas.
+- [x] Sonido sintetizado y animaciones mínimas.
 - [x] Soporte táctil (long press para bandera).
-- [ ] Chording.
+- [x] Chording con coste de movimiento.
+- [x] Rondas jefe cada 3 rondas (impuesto / minas extra).
 
 ### Fase 4 — Profundidad (post-prototipo)
-- [ ] Rondas jefe cada 3 rondas (modificadores: sin despeje, minas ocultas,
-      impuestos, campo minado extra).
+- [ ] Más jefes (sin despeje, minas ocultas, campo minado extra).
 - [ ] Consumibles (una vez por ronda).
 - [ ] Semilla diaria / reto compartido.
 - [ ] Progresión meta (desbloquear comodines).
+- [ ] Arte definitivo de tablero y comodines.
 
 ---
 

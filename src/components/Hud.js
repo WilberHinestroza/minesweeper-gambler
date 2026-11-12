@@ -1,15 +1,17 @@
 import { HEARTS } from '../game/balance';
 import { countFlags } from '../game/board';
+import { getBoss } from '../game/bosses';
 import { streakMultiplier } from '../game/scoring';
 
 function format(value) {
   return value.toLocaleString('es-ES');
 }
 
-export default function Hud({ state }) {
+export default function Hud({ state, muted, onToggleMute }) {
   const { board, config, score, target, hearts, clicksLeft, money, round } =
     state;
   const { streak } = state;
+  const boss = getBoss(state.boss);
 
   const progress = target > 0 ? Math.min(100, (score / target) * 100) : 0;
   const flagsUsed = board ? countFlags(board) : 0;
@@ -47,7 +49,33 @@ export default function Hud({ state }) {
             ×{streakMultiplier(streak)}
           </span>
         )}
+        {onToggleMute && (
+          <button
+            type="button"
+            className="badge sound"
+            aria-label={muted ? 'Activar sonido' : 'Silenciar sonido'}
+            title={muted ? 'Activar sonido' : 'Silenciar sonido'}
+            onClick={onToggleMute}
+          >
+            {muted ? '🔇' : '🔊'}
+          </button>
+        )}
       </div>
+
+      {boss && (
+        <div
+          className="boss-banner"
+          style={{ '--boss-color': boss.color }}
+          title={boss.description}
+          aria-label={`Jefe: ${boss.name}. ${boss.description}`}
+        >
+          <span className="boss-symbol" aria-hidden="true">
+            {boss.symbol}
+          </span>
+          <span className="boss-name">{boss.name}</span>
+          <span className="boss-desc">{boss.description}</span>
+        </div>
+      )}
 
       <div className="score-row">
         <span className="score">{format(score)}</span>

@@ -10,6 +10,13 @@ import {
   getRoundConfig,
 } from './balance';
 import {
+  applyBossConfig,
+  applyBossReward,
+  getBoss,
+  getBossForRound,
+} from './bosses';
+import {
+  chordCell,
   countCorrectFlags,
   countFlags,
   createEmptyBoard,
@@ -42,6 +49,7 @@ export function createInitialState(seed = Date.now()) {
     shop: null,
     config: null,
     board: null,
+    boss: null,
     target: 0,
     score: 0,
     clicksLeft: 0,
@@ -67,7 +75,8 @@ function beginRun(seed) {
 }
 
 export function startRound(state, round) {
-  const config = getRoundConfig(round);
+  const boss = getBossForRound(round);
+  const config = applyBossConfig(getRoundConfig(round), boss);
 
   return {
     ...state,
@@ -75,6 +84,7 @@ export function startRound(state, round) {
     round,
     config,
     board: createEmptyBoard(config.rows, config.cols, config.mines),
+    boss: boss ? boss.id : null,
     target: config.target,
     score: 0,
     clicksLeft: getClicksForRound(round),
@@ -101,6 +111,109 @@ function finishRun(state, reason, extra = {}) {
   };
 }
 
+// Resuelve una apertura de casillas (clic normal o chording) aplicando
+// protección de minas, puntuación y comodines. Compartir esta ruta mantiene
+// ambos tipos de clic con exactamente las mismas reglas.
+function resolveOpen(state, result, rng, { placed = false } = {}) {
+  if (result.revealed.length === 0) return state;
+
+  let board = result.board;
+  let detectorUsed = state.detectorUsed;
+
+  if (placed && hasJoker(state, 'detector') && !detectorUsed) {
+    board = applyDetector(board, state, rng);
+    detectorUsed = true;
+  }
+
+  const clicksLeft = state.clicksLeft - 1;
+  const clickId = state.clickId + 1;
+
+  if (result.hitMine) {
+    const protection = getMineProtection(state, rng);
+    const stuck = clicksLeft <= 0 && state.score < state.target;
+
+    if (protection) {
+      const next = {
+        ...state,
+        board: { ...board, explodedIndex: null },
+        clicksLeft,
+        streak: 0,
+        clickId,
+        detectorUsed,
+        seguroUsed: state.seguroUsed || protection === 'seguro',
+        cascoUsed: state.cascoUsed || protection === 'casco',
+        lastResult: {
+          type: 'dud',
+          protection,
+          chips: 0,
+          mult: 0,
+          points: 0,
+          id: clickId,
+        },
+      };
+
+      return stuck ? finishRun(next, 'clicks') : next;
+    }
+
+    const hearts = state.hearts - 1;
+
+    const next = {
+      ...state,
+      board,
+      clicksLeft,
+      hearts,
+      streak: 0,
+      clickId,
+      detectorUsed,
+      lastResult: {
+        type: 'mine',
+        chips: 0,
+        mult: 0,
+        points: 0,
+        id: clickId,
+      },
+    };
+
+    if (hearts <= 0) return finishRun(next, 'hearts');
+    if (stuck) return finishRun(next, 'clicks');
+    return next;
+  }
+
+  const baseClick = calculateClick({
+    cells: board.cells,
+    revealed: result.revealed,
+    streak: state.streak,
+    rows: board.rows,
+    cols: board.cols,
+  });
+
+  const scored = applyScoreJokers({
+    state,
+    click: {
+      ...baseClick,
+      correctFlags: countCorrectFlags(board),
+      flags: countFlags(board),
+    },
+  });
+
+  const score = state.score + scored.points;
+  const stuck = clicksLeft <= 0 && score < state.target;
+
+  const next = {
+    ...state,
+    board,
+    clicksLeft,
+    score,
+    streak: state.streak + 1,
+    clickId,
+    detectorUsed,
+    rayoUsed: state.rayoUsed || scored.rayoUsed,
+    lastResult: { type: 'safe', ...scored, id: clickId },
+  };
+
+  return stuck ? finishRun(next, 'clicks') : next;
+}
+
 export function runReducer(state, action) {
   switch (action.type) {
     case 'START_RUN': {
@@ -109,6 +222,19 @@ export function runReducer(state, action) {
 
     case 'RESTART': {
       return beginRun((action.seed ?? Date.now()) >>> 0);
+    }
+
+    case 'RESUME_RUN': {
+      const saved = action.state;
+      if (!saved || !['starter', 'round', 'shop'].includes(saved.phase)) {
+        return state;
+      }
+
+      return { ...saved, lastResult: null };
+    }
+
+    case 'MENU': {
+      return createInitialState((action.seed ?? Date.now()) >>> 0);
     }
 
     case 'PICK_STARTER': {
@@ -124,116 +250,29 @@ export function runReducer(state, action) {
     case 'REVEAL': {
       if (state.phase !== 'round' || state.clicksLeft <= 0) return state;
 
-      const seed =
+      const rng = createRng(
         (state.seed ^
           Math.imul(state.round, 0x9e3779b9) ^
           Math.imul(state.clickId + 1, 0x85ebca6b)) >>>
-        0;
-      const rng = createRng(seed);
-      const {
-        board: revealedBoard,
-        revealed,
-        hitMine,
-        placed,
-      } = revealCell(state.board, action.index, rng);
+          0
+      );
+      const result = revealCell(state.board, action.index, rng);
 
-      if (revealed.length === 0) return state;
+      return resolveOpen(state, result, rng, { placed: result.placed });
+    }
 
-      let board = revealedBoard;
-      let detectorUsed = state.detectorUsed;
+    case 'CHORD': {
+      if (state.phase !== 'round' || state.clicksLeft <= 0) return state;
 
-      if (placed && hasJoker(state, 'detector') && !detectorUsed) {
-        board = applyDetector(board, state, rng);
-        detectorUsed = true;
-      }
+      const rng = createRng(
+        (state.seed ^
+          Math.imul(state.round, 0x9e3779b9) ^
+          Math.imul(state.clickId + 1, 0x85ebca6b)) >>>
+          0
+      );
+      const result = chordCell(state.board, action.index, rng);
 
-      const clicksLeft = state.clicksLeft - 1;
-      const clickId = state.clickId + 1;
-
-      if (hitMine) {
-        const protection = getMineProtection(state, rng);
-        const stuck = clicksLeft <= 0 && state.score < state.target;
-
-        if (protection) {
-          const next = {
-            ...state,
-            board: { ...board, explodedIndex: null },
-            clicksLeft,
-            streak: 0,
-            clickId,
-            detectorUsed,
-            seguroUsed: state.seguroUsed || protection === 'seguro',
-            cascoUsed: state.cascoUsed || protection === 'casco',
-            lastResult: {
-              type: 'dud',
-              protection,
-              chips: 0,
-              mult: 0,
-              points: 0,
-              id: clickId,
-            },
-          };
-
-          return stuck ? finishRun(next, 'clicks') : next;
-        }
-
-        const hearts = state.hearts - 1;
-
-        const next = {
-          ...state,
-          board,
-          clicksLeft,
-          hearts,
-          streak: 0,
-          clickId,
-          detectorUsed,
-          lastResult: {
-            type: 'mine',
-            chips: 0,
-            mult: 0,
-            points: 0,
-            id: clickId,
-          },
-        };
-
-        if (hearts <= 0) return finishRun(next, 'hearts');
-        if (stuck) return finishRun(next, 'clicks');
-        return next;
-      }
-
-      const baseClick = calculateClick({
-        cells: board.cells,
-        revealed,
-        streak: state.streak,
-        rows: board.rows,
-        cols: board.cols,
-      });
-
-      const result = applyScoreJokers({
-        state,
-        click: {
-          ...baseClick,
-          correctFlags: countCorrectFlags(board),
-          flags: countFlags(board),
-        },
-      });
-
-      const score = state.score + result.points;
-      const stuck = clicksLeft <= 0 && score < state.target;
-
-      const next = {
-        ...state,
-        board,
-        clicksLeft,
-        score,
-        streak: state.streak + 1,
-        clickId,
-        detectorUsed,
-        rayoUsed: state.rayoUsed || result.rayoUsed,
-        lastResult: { type: 'safe', ...result, id: clickId },
-      };
-
-      return stuck ? finishRun(next, 'clicks') : next;
+      return resolveOpen(state, result, rng);
     }
 
     case 'FLAG': {
@@ -245,11 +284,13 @@ export function runReducer(state, action) {
     case 'CASH_OUT': {
       if (state.phase !== 'round' || state.score < state.target) return state;
 
+      const boss = getBoss(state.boss);
       const correctFlags = countCorrectFlags(state.board);
       const flagBonus = Math.min(correctFlags, MAX_FLAG_REWARD);
       const moneyJokers = applyMoneyJokers(state);
-      const reward =
+      const rawReward =
         BASE_REWARD + state.clicksLeft + flagBonus + moneyJokers.total;
+      const reward = applyBossReward(rawReward, boss);
       const rng = createRng(
         (state.seed ^ Math.imul(state.round, 0x27d4eb2d) ^ 0x5f3759df) >>> 0
       );
@@ -267,6 +308,8 @@ export function runReducer(state, action) {
           flagBonus,
           codicia: moneyJokers.codicia,
           interes: moneyJokers.interes,
+          raw: rawReward,
+          tax: rawReward - reward,
         },
         shop: {
           offers: rollShop(rng, state.jokers),
